@@ -16,18 +16,20 @@ class PasienController extends Controller
     public function index(Request $request)
     {
         $response = Http::withHeaders($this->headers)
-                        ->get($this->baseUrl, [
-                            'search' => $request->get('search'),
-                        ]);
+            ->get($this->baseUrl, [
+                'search' => $request->get('search'),
+            ]);
 
         if ($response->failed()) {
             return back()->with('error', 'Gagal mengambil data pasien');
         }
 
-        $patients = $response->json();
-        return view('patients.index', [
-            'patients' => $patients['data'] ?? []
-        ]);
+        $result = $response->json();
+
+        // pastikan selalu array biar ga error
+        $patients = $result['data'] ?? [];
+
+        return view('patients.index', compact('patients'));
     }
 
     public function create()
@@ -45,7 +47,7 @@ class PasienController extends Controller
         ]);
 
         $response = Http::withHeaders($this->headers)
-                        ->post($this->baseUrl, $validated);
+            ->post($this->baseUrl, $validated);
 
         return $response->successful()
             ? redirect()->route('patients.index')->with('success', 'Pasien berhasil ditambahkan')
@@ -55,13 +57,14 @@ class PasienController extends Controller
     public function edit($id)
     {
         $response = Http::withHeaders($this->headers)
-                        ->get($this->baseUrl . '/' . $id);
+            ->get("{$this->baseUrl}/$id");
 
         if ($response->failed()) {
             return back()->with('error', 'Gagal mengambil data pasien');
         }
 
         $patient = $response->json();
+
         return view('patients.edit', compact('patient'));
     }
 
@@ -74,9 +77,8 @@ class PasienController extends Controller
             'gender'     => 'required|in:male,female',
         ]);
 
-        // Pakai PATCH agar sesuai dengan kebanyakan mock API
         $response = Http::withHeaders($this->headers)
-                        ->patch($this->baseUrl . '/' . $id, $validated);
+            ->patch("{$this->baseUrl}/$id", $validated);
 
         return $response->successful()
             ? redirect()->route('patients.index')->with('success', 'Data pasien berhasil diperbarui')
@@ -86,7 +88,7 @@ class PasienController extends Controller
     public function destroy($id)
     {
         $response = Http::withHeaders($this->headers)
-                        ->delete($this->baseUrl . '/' . $id);
+            ->delete("{$this->baseUrl}/$id");
 
         return $response->successful()
             ? redirect()->route('patients.index')->with('success', 'Data pasien berhasil dihapus')

@@ -14,7 +14,7 @@
 <div class="card mb-4">
     <div class="card-body">
         <form method="GET" action="{{ route('patients.index') }}">
-            <div class="row">
+            <div class="row g-2">
                 <div class="col-md-10">
                     <input type="text" name="search" class="form-control"
                            placeholder="Cari nama atau nomor RM..."
@@ -30,38 +30,24 @@
     </div>
 </div>
 
-{{-- Debug Info --}}
-@if(config('app.debug'))
-<div class="alert alert-info">
-    <strong>Debug:</strong> 
-    Patients type: {{ gettype($patients) }} | 
-    @if(is_array($patients))
-        Keys: {{ implode(', ', array_keys($patients)) }}
-    @endif
-</div>
-@endif
+{{-- Ambil data pasien --}}
+@php
+    $patientsData = [];
+    if (is_array($patients)) {
+        $patientsData = $patients['data'] ?? $patients;
+    }
+@endphp
 
 {{-- Tabel Pasien --}}
 <div class="card">
     <div class="card-body">
-        @php
-            // Flexible data handling
-            $patientsData = [];
-            if (is_array($patients)) {
-                if (isset($patients['data']) && is_array($patients['data'])) {
-                    $patientsData = $patients['data'];
-                } else {
-                    $patientsData = $patients;
-                }
-            }
-        @endphp
-
         @if(count($patientsData) > 0)
             <div class="table-responsive">
-                <table class="table table-hover">
-                    <thead class="table-dark">
+                <table class="table table-bordered table-striped align-middle">
+                    <thead class="table-dark text-center">
                         <tr>
                             <th>No</th>
+                            <th>Foto</th>
                             <th>Nomor RM</th>
                             <th>Nama Lengkap</th>
                             <th>Jenis Kelamin</th>
@@ -71,10 +57,12 @@
                     <tbody>
                         @foreach($patientsData as $i => $patient)
                         <tr>
-                            <td>{{ $i + 1 }}</td>
-                            <td>
-                                <span class="badge bg-secondary">{{ $patient['rm_number'] ?? '-' }}</span>
+                            <td class="text-center">{{ $i + 1 }}</td>
+                            <td class="text-center">
+                                <img src="{{ $patient['avatar'] ?? 'https://via.placeholder.com/40' }}"
+                                     alt="Foto Pasien" class="rounded-circle" width="40" height="40">
                             </td>
+                            <td><span class="badge bg-secondary">{{ $patient['rm_number'] ?? '-' }}</span></td>
                             <td>{{ ($patient['first_name'] ?? '') }} {{ ($patient['last_name'] ?? '') }}</td>
                             <td>
                                 @if(($patient['gender'] ?? '') === 'male')
@@ -85,7 +73,7 @@
                                     <span class="badge bg-secondary">-</span>
                                 @endif
                             </td>
-                            <td>
+                            <td class="text-center">
                                 @if(isset($patient['id']))
                                 <div class="btn-group" role="group">
                                     <a href="{{ route('patients.edit', $patient['id']) }}"
@@ -111,8 +99,6 @@
                     </tbody>
                 </table>
             </div>
-
-            {{-- Info jumlah data --}}
             <div class="mt-3">
                 <small class="text-muted">
                     Menampilkan {{ count($patientsData) }} data pasien
@@ -143,18 +129,4 @@
         @endif
     </div>
 </div>
-
-{{-- Raw data untuk debugging --}}
-@if(config('app.debug'))
-<div class="mt-4">
-    <div class="card">
-        <div class="card-header">
-            <small>Debug: Raw API Response</small>
-        </div>
-        <div class="card-body">
-            <pre style="max-height: 300px; overflow-y: auto;">{{ print_r($patients, true) }}</pre>
-        </div>
-    </div>
-</div>
-@endif
 @endsection
